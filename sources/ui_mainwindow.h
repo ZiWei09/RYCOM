@@ -189,7 +189,7 @@ public:
         radioButton_led->setGeometry(QRect(20, 160, 31, 41));
         radioButton_led->setStyleSheet(QLatin1String("QRadioButton::indicator:checked{background-color:red;}\n"
 "QRadioButton::indicator:unchecked{background-color:black;}\n"
-"QRadioButton::indicator{width:25px;height:25px;border-radius:12px;}"));
+"QRadioButton::indicator{width:18px;height:18px;border-radius:9px;}"));
         radioButton_led->setCheckable(true);
         radioButton_led->setChecked(false);
         radioButton_led->setAutoExclusive(false);
@@ -647,7 +647,7 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "RYCOM\344\270\262\345\217\243\350\260\203\350\257\225\345\212\251\346\211\213V2.6.2 rymcu.com\345\265\214\345\205\245\345\274\217\347\237\245\350\257\206\345\255\246\344\271\240\344\272\244\346\265\201\345\271\263\345\217\260", Q_NULLPTR));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "RYCOM\344\270\262\345\217\243\350\260\203\350\257\225\345\212\251\346\211\213V2.6.3 rymcu.com\345\265\214\345\205\245\345\274\217\347\237\245\350\257\206\345\255\246\344\271\240\344\272\244\346\265\201\345\271\263\345\217\260", Q_NULLPTR));
         lineEditTime->setText(QApplication::translate("MainWindow", "1000", Q_NULLPTR));
         labelMS->setText(QApplication::translate("MainWindow", "ms", Q_NULLPTR));
         checkBoxPeriodicSend->setText(QApplication::translate("MainWindow", "\345\221\250\346\234\237\345\217\221\351\200\201", Q_NULLPTR));

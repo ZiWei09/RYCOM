@@ -6,7 +6,7 @@ QByteArray MyComRevBUff;//串口接收数据缓存
 
 void delay_msec(int msec)
 {
-    QTime MyTimer;
+    QElapsedTimer MyTimer;
     MyTimer.start();
     while (MyTimer.elapsed()<msec) QCoreApplication::processEvents();
 

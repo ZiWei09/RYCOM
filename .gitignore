@@ -24,3 +24,4 @@
 *.Debug
 *.Release
 *.bak
+build-codex/

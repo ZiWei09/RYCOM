@@ -1,5 +1,8 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include <ui_mainwindow.h>
+#include <QCoreApplication>
+#include <QElapsedTimer>
+#include <QEventLoop>
 
 /***********************************************************
  * 窗口构造函数，初始化工作在这里完成！
@@ -14,7 +17,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     //根据系统选择参数：Windows，MACos,Linux
+#if defined(Q_OS_MACOS) || defined(Q_OS_MAC)
     refreshDPI(MACos); //根据系统dpi调整窗体大小
+#elif defined(Q_OS_LINUX)
+    refreshDPI(Linux);
+#else
+    refreshDPI(Windows);
+#endif
     //connect(screen, &QScreen::logicalDotsPerInchChanged, this, &MainWindow::onLogicalDotsPerInchChanged);
         //失能和隐藏相应控件
         ui->pushButtonSend->setEnabled(false);//使相应的按钮不可用
@@ -28,6 +37,11 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->groupBoxRev->setFixedWidth(541*myobjectRate);//根据屏幕分辨率不一样固定接收组的大小
         ui->TextRev->setFixedWidth(521*myobjectRate);//根据屏幕分辨率不一样固定接收窗口的大小
         this->setFixedSize(729*myobjectRate,584*myobjectRate);//根据屏幕分辨率不一样固定主窗口的大小
+#ifdef Q_OS_WIN
+        QFont logFont("NSimSun", 10);
+        ui->TextRev->setFont(logFont);
+        ui->TextSend->setFont(logFont);
+#endif
 
 
         //创建周期发送、时间显示、延时接收定时器，并初始化
@@ -91,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
          qlbLinkRYMCU->setOpenExternalLinks(true);//状态栏显示官网、源码链接
          qlbLinkRYMCU->setText("<style> a {text-decoration: none} </style> <a href=\"https://rymcu.com\">--RYMCU官网--");// 无下划线
          qlbLinkSource->setOpenExternalLinks(true);
-         qlbLinkSource->setText("<style> a {text-decoration: none} </style> <a href=\"https://github.com/rymcu/RYCOM\">--助手源代码V2.6.2--");// 无下划线
+         qlbLinkSource->setText("<style> a {text-decoration: none} </style> <a href=\"https://github.com/rymcu/RYCOM\">--助手源代码V2.6.3--");// 无下划线
          //隐藏进度条
          ui->progressBar->setVisible(false);
          //串口指示灯设置为只读控件，屏蔽鼠标点击事件
@@ -137,8 +151,7 @@ void MainWindow::time_update()
 void MainWindow::setNumOnLabel(QLabel *lbl, QString strS, long num)
 {
     // 标签显示
-    QString strN;
-    strN.sprintf("%ld", num);
+    QString strN = QString::number(num);
     QString str = strS + strN;
     lbl->setText(str);
 }
@@ -231,7 +244,7 @@ void MainWindow::MyComRevSlot()
  ***********************************************************/
 void MainWindow::on_pushButtonOpen_clicked()
 {
-    QSerialPort::BaudRate CombaudRate;
+    qint32 CombaudRate;
     QSerialPort::DataBits ComdataBits;
     QSerialPort::StopBits ComstopBits;
     QSerialPort::Parity   ComParity;
@@ -271,31 +284,31 @@ void MainWindow::on_pushButtonOpen_clicked()
      }
      else if(ui->comboBoxComBaud->currentText()=="230400")//添加高波特率支持，更改qserialport.h中enum BaudRate.
      {
-         CombaudRate = QSerialPort::Baud230400;
+         CombaudRate = 230400;
      }
      else if(ui->comboBoxComBaud->currentText()=="345600")
      {
-         CombaudRate = QSerialPort::Baud345600;
+         CombaudRate = 345600;
      }
      else if(ui->comboBoxComBaud->currentText()=="460800")
      {
-         CombaudRate = QSerialPort::Baud460800;
+         CombaudRate = 460800;
      }
      else if(ui->comboBoxComBaud->currentText()=="576000")
      {
-         CombaudRate = QSerialPort::Baud576000;
+         CombaudRate = 576000;
      }
      else if(ui->comboBoxComBaud->currentText()=="921600")
      {
-         CombaudRate = QSerialPort::Baud921600;
+         CombaudRate = 921600;
      }
      else if(ui->comboBoxComBaud->currentText()=="1382400")
      {
-         CombaudRate = QSerialPort::Baud1382400;
+         CombaudRate = 1382400;
      }
      else
      {
-         CombaudRate = QSerialPort::UnknownBaud;
+         CombaudRate = ui->comboBoxComBaud->currentText().toInt();
      }
 
 
@@ -318,7 +331,7 @@ void MainWindow::on_pushButtonOpen_clicked()
     }
     else
     {
-        ComdataBits = QSerialPort::UnknownDataBits;
+        ComdataBits = QSerialPort::Data8;
     }
 
     //获取停止位
@@ -336,7 +349,7 @@ void MainWindow::on_pushButtonOpen_clicked()
     }
     else
     {
-        ComstopBits = QSerialPort::UnknownStopBits;
+        ComstopBits = QSerialPort::OneStop;
     }
 
     //获取校验方式
@@ -362,7 +375,7 @@ void MainWindow::on_pushButtonOpen_clicked()
     }
     else
     {
-        ComParity = QSerialPort::UnknownParity;
+        ComParity = QSerialPort::NoParity;
     }
 
     //获取端口号
@@ -774,6 +787,7 @@ bool MainWindow::openTextByIODevice(const QString &aFileName)
 ***********************************************************/
 QString MainWindow::byteArrayToUnicode(const QByteArray &array)
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     // state用于保存转换状态，它的成员invalidChars，可用来判断是否转换成功
     // 如果转换成功，则值为0，如果值大于0，则说明转换失败
     QTextCodec::ConverterState state;
@@ -786,6 +800,16 @@ QString MainWindow::byteArrayToUnicode(const QByteArray &array)
         text = QTextCodec::codecForName("GBK")->toUnicode(array);
     }
     return text;
+#else
+    QStringDecoder utf8Decoder(QStringDecoder::Utf8);
+    QString text = utf8Decoder.decode(array);
+    if (utf8Decoder.hasError())
+    {
+        QStringDecoder localDecoder(QStringDecoder::System);
+        text = localDecoder.decode(array);
+    }
+    return text;
+#endif
 }
 
 /***********************************************************
@@ -1355,10 +1379,7 @@ void MainWindow::on_pushButton_STM32_START_clicked()
         temp[0] = (unsigned char)DeviceInfo.bootloaderversion /16 + '0';
         temp[1] = '.';
         temp[2] = (unsigned char)DeviceInfo.bootloaderversion %16 + '0';
-        QString str;
-        str[0] = temp[0];
-        str[1] = temp[1];
-        str[2] = temp[2];
+        QString str = QString::fromLatin1((const char *)temp, sizeof(temp));
 
         ui->TextRev->insertPlainText("当前Bootloader版本: V");//显示数据//ui->TextRev->insertPlainText("BootLoader Version: V");//显示数据
 
@@ -1993,7 +2014,7 @@ void MainWindow::on_pushButton_ESP32_START_clicked()
    }
    ui->TextRev->insertPlainText("\r\nspi flash挂载成功,");
    myDebug() << "spi flash挂载成功";
-   if(ESP_LOADER_SUCCESS != loader_spi_parameters(DEFAULT_FLASH_SIZE))//8M flash
+   if(ESP_LOADER_SUCCESS != loader_spi_parameters(s_target_flash_size))
    {
        myDebug() << "loader_spi_parameters set fail"<<s_target;
        ResumeFormESP32ISP();
@@ -2066,9 +2087,32 @@ esp_loader_error_t MainWindow::esp32_flash_binary(const uint8_t *bin, size_t siz
     esp_loader_error_t err;
     static uint8_t payload[1024];
     const uint8_t *bin_addr = bin;
+    uint32_t aligned_size = ROUNDUP(size, ESP32_FLASH_ALIGN);
+    QElapsedTimer uiRefreshTimer;
+
+    auto refreshUi = []() {
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents, 5);
+    };
+
+    if (bin == NULL || size == 0) {
+        ui->TextRev->insertPlainText("bin文件为空，取消下载!\r\n");
+        return ESP_LOADER_ERROR_INVALID_PARAM;
+    }
+
+    quint64 flash_end_addr = (quint64)address + aligned_size;
+    if (s_target_flash_size > 0 && flash_end_addr > s_target_flash_size) {
+        ui->TextRev->insertPlainText("bin文件超出目标FLASH容量，取消下载!\r\n");
+        ui->TextRev->insertPlainText("下载末地址:0x");
+        ui->TextRev->insertPlainText(QString::number(flash_end_addr, 16));
+        ui->TextRev->insertPlainText(" FLASH容量:0x");
+        ui->TextRev->insertPlainText(QString::number(s_target_flash_size, 16));
+        ui->TextRev->insertPlainText("\r\n");
+        return ESP_LOADER_ERROR_IMAGE_SIZE;
+    }
 
    myDebug()<<"Erasing flash (this may take a while)...";
-    err = esp_loader_flash_start(address, size, sizeof(payload));
+    refreshUi();
+    err = esp_loader_flash_start(address, aligned_size, sizeof(payload));
     if (err != ESP_LOADER_SUCCESS)
     {
       //printf("esp_loader_flash_start fail:%d\n",err);
@@ -2080,6 +2124,7 @@ esp_loader_error_t MainWindow::esp32_flash_binary(const uint8_t *bin, size_t siz
     size_t binary_size = size;
     size_t written = 0;
     myDebug()<<"binary_size:"<<size;
+    uiRefreshTimer.start();
     switch (location) {
     case BOOT_COMBIN:
         ui->progressBar_BOOT_Combine->setVisible(true);
@@ -2111,6 +2156,7 @@ esp_loader_error_t MainWindow::esp32_flash_binary(const uint8_t *bin, size_t siz
     default:
         break;
     }
+    refreshUi();
 
     while (size > 0)
     {
@@ -2146,6 +2192,11 @@ esp_loader_error_t MainWindow::esp32_flash_binary(const uint8_t *bin, size_t siz
                 break;
             default:
                 break;
+        }
+
+        if (uiRefreshTimer.elapsed() >= 50 || written >= binary_size) {
+            refreshUi();
+            uiRefreshTimer.restart();
         }
 
     };

@@ -8,7 +8,12 @@
 #include <QTime>
 #include <QFileDialog>
 #include <QFile>
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QTextCodec>
+#else
+#include <QStringConverter>
+#endif
 #include <QScreen>
 
 #include <ryisp.h>

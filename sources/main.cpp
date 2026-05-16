@@ -1,12 +1,19 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <ryisp.h>
+#include <QFont>
 #include <QStyleFactory>
 
 int main(int argc, char *argv[])
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
+#endif
     QApplication a(argc, argv);
     a.setStyle(QStyleFactory::create("Fusion"));  //使用 Fusion 样式,for mac 解决MAC下进度条不显示百分比问题
+#ifdef Q_OS_WIN
+    a.setFont(QFont("SimSun", 9));
+#endif
     MainWindow w;
     w.show();
 
@@ -23,6 +30,10 @@ int main(int argc, char *argv[])
 
 /************************************************
  ********************版本说明*********************
+ *
+ * 20260516 RYCOM 2.6.3.exe
+ * 1.优化ESP32大bin下载稳定性
+ * 2.兼容Qt6构建，调整Windows界面DPI和字体
  *
  * 20250214 RYCOM 2.6.2.exe
  * 1.优化界面布局

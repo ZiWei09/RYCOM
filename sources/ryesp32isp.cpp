@@ -1,4 +1,7 @@
 #include <ryesp32isp.h>
+#include <QCoreApplication>
+#include <QElapsedTimer>
+#include <QEventLoop>
 
 target_registers_t *s_reg = NULL;
 target_chip_t s_target = ESP_UNKNOWN_CHIP;
@@ -6,6 +9,38 @@ uint8_t DELIMITER = 0xC0;
 uint8_t C0_REPLACEMENT[2] = {0xDB, 0xDC};
 uint8_t DB_REPLACEMENT[2] = {0xDB, 0xDD};
 uint32_t ESP32_loader_daud = 115200;//临时存储ESP32下载波特率，用于改变波特率CMD
+uint32_t s_target_flash_size = 0;
+esp32_binaries_t esp32_bin = {NULL};//目标.bin文件信息
+
+static const int ESP32_LOADER_DEFAULT_TIMEOUT_MS = 30000;
+static const int ESP32_FLASH_ERASE_TIMEOUT_PER_MB_MS = 30000;
+static int s_flash_begin_timeout_ms = ESP32_LOADER_DEFAULT_TIMEOUT_MS;
+static uint32_t s_flash_write_size = 0;
+static uint32_t s_sequence_number = 0;
+
+static void keep_ui_responsive()
+{
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents, 5);
+}
+
+static int calc_flash_begin_timeout_ms(uint32_t erase_size)
+{
+    const uint32_t bytes_per_mb = 1024U * 1024U;
+    uint32_t erase_mb = (erase_size + bytes_per_mb - 1U) / bytes_per_mb;
+
+    if (erase_mb == 0) {
+        return ESP32_LOADER_DEFAULT_TIMEOUT_MS;
+    }
+
+    quint64 timeout_ms = ESP32_LOADER_DEFAULT_TIMEOUT_MS;
+    timeout_ms += (quint64)erase_mb * ESP32_FLASH_ERASE_TIMEOUT_PER_MB_MS;
+
+    if (timeout_ms > 0x7fffffffU) {
+        return 0x7fffffff;
+    }
+
+    return (int)timeout_ms;
+}
 
 
 void Uart_write(uint8_t* data,size_t size)
@@ -14,29 +49,75 @@ void Uart_write(uint8_t* data,size_t size)
 }
 uint8_t Uart_read(QByteArray *data,command_t command)
 {
-    if(command != SYNC) //同步指令不需要等待
-    {
-        if(false == MyCom.waitForReadyRead(30000))
-        {
-          myDebug()<<"等待串口数据超时";
-          return 1;//30s还没收到数据，认为有问题//函数目的：擦除需要时间，30s应该足够了
-        }
-        //计算时间10^6us*150/baud
-        qint64 wait_time = 150000000/ESP32_loader_daud;
-        delay_usec(wait_time);
-        //delay_usec(500);//发现串口有数据后，等待500us,确保整包数据接收完整(这里采用延时方法接收数据包，做法比较简单但是限制了传输速度，还有优化空间)
-    }
-    else
+    if(command == SYNC) //同步指令按短延时读取，避免握手失败时一次阻塞太久
     {
         delay_msec(100);//延时100ms,等待数据接收完成,同步指令返回数据较多
+        if(MyCom.bytesAvailable()>=MIN_RESP_DATA_SIZE)
+        {
+            *data = MyCom.readAll();
+            myDebug() << "data_uart0: " <<data->toHex();
+            return 0;
+        }
+        return 1;
     }
 
-    if(MyCom.bytesAvailable()>=MIN_RESP_DATA_SIZE)
-    {
-        *data = MyCom.readAll();
-        myDebug() << "data_uart0: " <<data->toHex();
-        return 0;
+    int timeout_ms = ESP32_LOADER_DEFAULT_TIMEOUT_MS;
+    if (command == FLASH_BEGIN) {
+        timeout_ms = s_flash_begin_timeout_ms;
     }
+
+    QByteArray packet;
+    QElapsedTimer timer;
+    timer.start();
+
+    while (timer.elapsed() < timeout_ms)
+    {
+        keep_ui_responsive();
+
+        if(MyCom.bytesAvailable() == 0)
+        {
+            int remaining_ms = timeout_ms - (int)timer.elapsed();
+            if (remaining_ms <= 0) {
+                break;
+            }
+            if(false == MyCom.waitForReadyRead(remaining_ms > 100 ? 100 : remaining_ms))
+            {
+                keep_ui_responsive();
+                continue;
+            }
+        }
+
+        keep_ui_responsive();
+        packet.append(MyCom.readAll());
+
+        int start = packet.indexOf((char)DELIMITER);
+        if (start < 0) {
+            packet.clear();
+            continue;
+        }
+        if (start > 0) {
+            packet.remove(0, start);
+        }
+
+        int payload_start = 1;
+        while (payload_start < packet.size() && (uint8_t)packet.at(payload_start) == DELIMITER) {
+            payload_start++;
+        }
+
+        if (payload_start >= packet.size()) {
+            continue;
+        }
+
+        int end = packet.indexOf((char)DELIMITER, payload_start);
+        if (end >= 0 && end + 1 >= MIN_RESP_DATA_SIZE)
+        {
+            *data = packet.left(end + 1);
+            myDebug() << "data_uart0: " <<data->toHex();
+            return 0;
+        }
+    }
+
+    myDebug()<<"等待串口数据超时";
     return 1;
 }
 void Send_0xC0()
@@ -176,6 +257,8 @@ esp_loader_error_t loader_change_baudrate_cmd(uint32_t new_baudrate, uint32_t ol
  ***********************************************************/
 esp_loader_error_t loader_flash_begin_cmd(uint32_t offset, uint32_t erase_size, uint32_t block_size,uint32_t blocks_to_write, bool encryption)
 {
+    s_flash_begin_timeout_ms = calc_flash_begin_timeout_ms(erase_size);
+
     flash_begin_command_t flash_begin_cmd = {
         .common = {
             .direction = WRITE_DIRECTION,

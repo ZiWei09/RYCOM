@@ -31,14 +31,11 @@
 extern target_registers_t *s_reg;
 extern target_chip_t s_target;//目标芯片型号
 extern uint32_t ESP32_loader_daud;//临时存储ESP32下载波特率，用于改变波特率CMD
-
-static uint32_t s_flash_write_size = 0;
-static uint32_t s_sequence_number = 0;
-static uint32_t s_target_flash_size = 0;
-
-static  esp32_binaries_t esp32_bin ={NULL};//目标.bin文件信息
+extern uint32_t s_target_flash_size;
+extern esp32_binaries_t esp32_bin;//目标.bin文件信息
 
 #define DEFAULT_FLASH_SIZE  16*1024*1024
+#define ESP32_FLASH_ALIGN   4
 
 //esp_loader_error_t flash_binary(const uint8_t *bin, size_t size, size_t address);
 esp_loader_error_t esp_loader_flash_start(uint32_t offset, uint32_t image_size, uint32_t block_size);
