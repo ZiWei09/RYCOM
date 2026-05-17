@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>500</height>
+    <height>630</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>620</width>
-    <height>500</height>
+    <height>520</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -264,15 +264,21 @@ QRadioButton::indicator{width:18px;height:18px;border-radius:9px;}</string>
       <item>
        <widget class="QGroupBox" name="groupBoxRevSet">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>175</width>
+          <width>190</width>
           <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>220</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="title">
@@ -350,15 +356,21 @@ QRadioButton::indicator{width:18px;height:18px;border-radius:9px;}</string>
       <item>
        <widget class="QGroupBox" name="groupBoxSendSet">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>175</width>
+          <width>190</width>
           <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>220</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="title">
@@ -453,7 +465,7 @@ QRadioButton::indicator{width:18px;height:18px;border-radius:9px;}</string>
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_right">
+     <layout class="QVBoxLayout" name="verticalLayout_right" stretch="3,0,1">
       <property name="spacing">
        <number>6</number>
       </property>
@@ -467,7 +479,7 @@ QRadioButton::indicator{width:18px;height:18px;border-radius:9px;}</string>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>1</horstretch>
-            <verstretch>1</verstretch>
+            <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="title">
@@ -742,7 +754,7 @@ QRadioButton::indicator{width:18px;height:18px;border-radius:9px;}</string>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
+          <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <widget class="QGroupBox" name="groupBoxSend">
