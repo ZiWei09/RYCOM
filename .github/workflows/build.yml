@@ -28,11 +28,12 @@ jobs:
           qmake ../../sources/RYCOM.pro CONFIG+=release
           make -j$(sysctl -n hw.ncpu)
 
-      - name: Package DMG
+      - name: Package & Sign DMG
         run: |
           cp sources/rymculogo.icns build-codex/macos/RYCOM.app/Contents/Resources/
-          macdeployqt build-codex/macos/RYCOM.app -dmg -always-overwrite -verbose=2
-          mv build-codex/macos/RYCOM.dmg build-codex/RYCOM-2.6.3.dmg
+          macdeployqt build-codex/macos/RYCOM.app -always-overwrite -verbose=2
+          codesign --force --deep --sign - build-codex/macos/RYCOM.app
+          hdiutil create -volname RYCOM -srcfolder build-codex/macos/RYCOM.app -ov -format UDZO build-codex/RYCOM-2.6.3.dmg
 
       - name: Upload DMG
         uses: actions/upload-artifact@v4
