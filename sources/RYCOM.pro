@@ -26,9 +26,10 @@ ICON = rymculogo.icns
 macx:QMAKE_APPLE_DEVICE_ARCHS = arm64
 
 # Windows: 修复 GCC 15+ MinGW 中 __imp___argc 链接错误
-# 确保 mingw32 在 Qt6EntryPoint 之前链接
+# 使用 QMAKE_LFLAGS 在链接最开始就加入 mingw32
 win32 {
-    QMAKE_LIBS_QT_ENTRY = -lmingw32 $$QMAKE_LIBS_QT_ENTRY
+    QMAKE_LFLAGS += -lmingw32
+    QMAKE_LIBS_QT_ENTRY =
 }
 
 # You can also make your code fail to compile if you use deprecated APIs.
