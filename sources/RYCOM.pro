@@ -26,10 +26,9 @@ ICON = rymculogo.icns
 macx:QMAKE_APPLE_DEVICE_ARCHS = arm64
 
 # Windows: 修复 GCC 15+ MinGW 中 __imp___argc 链接错误
-# 使用完整路径链接 mingw32 和 Qt6EntryPoint，确保正确顺序
+# 不使用 Qt6EntryPoint，在 main.cpp 中直接实现 WinMain
 win32 {
-    LIBS = C:/mingw64/x86_64-w64-mingw32/lib/libmingw32.a $$[QT_INSTALL_LIBS]/libQt6EntryPoint.a $$LIBS
-    CONFIG -= import_qpa_plugin
+    DEFINES += QT_NO_ENTRYPOINT
 }
 
 # You can also make your code fail to compile if you use deprecated APIs.
