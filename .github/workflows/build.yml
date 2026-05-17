@@ -18,7 +18,7 @@ jobs:
           version: '6.9.2'
           host: 'mac'
           target: 'desktop'
-          modules: 'qtserialport qtnetwork'
+          modules: 'qtserialport'
           cache: true
 
       - name: Build
@@ -52,7 +52,7 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: 'win64_mingw'
-          modules: 'qtserialport qtnetwork'
+          modules: 'qtserialport'
           cache: true
 
       - name: Build
