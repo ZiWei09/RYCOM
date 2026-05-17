@@ -71,7 +71,7 @@ char RY_Ymodem::TxSoh(const QString FilePath)
      //校验
         WriteCRC16(YMODEM_PACKET_SIZE);
 
-     qDebug("Name:%s(%dByte),Size:%s(%dByte)",(char *)TxBuffer+3,FileNameLength,(char *)(TxBuffer+3+FileNameLength+1),FileSizeLength);
+     qDebug("Name:%s(%zuByte),Size:%s(%zuByte)",(char *)TxBuffer+3,FileNameLength,(char *)(TxBuffer+3+FileNameLength+1),FileSizeLength);
 
      //发送Soh
      SendData_Ymodem((char *)TxBuffer,YMODEM_PACKET_SIZE + YMODEM_PACKET_OVERHEAD);
