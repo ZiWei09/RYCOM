@@ -20,7 +20,6 @@
 #include <mycom.h>
 #include <HexToBin.h>
 #include <ry_ymodem.h>
-#include <myfilewatcher.h>
 #include <ryesp32isp.h>
 
 #include"QDebug"
@@ -144,7 +143,6 @@ private:
     QTimer *recvDelayTimer;//接收延时定时器，解决中文分段乱码
 
     QDateTime curDateTime;//系统时间变量
-    //QFileSystemWatcher* my_watcher;//文件监控对象
 
     //定时器用于监控文件变化
     QTimer *FileChanged;
@@ -158,6 +156,7 @@ private:
 
     void Pre_on_pushButtonSend_clicked();//多行周期发送预处理函数
     int Get_checkBoxMuti_State();//获取多行周期发送的选中状态
+    void sendMutiLine(int lineNo);//发送指定行的数据
     void SendDataByNoOfEditLineNo(int EditLineNo);//根据状态,发送指定行的数据
     void time_update(); //时间更新槽函数，状态栏显示时间
 

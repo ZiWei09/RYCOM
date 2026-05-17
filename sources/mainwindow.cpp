@@ -483,7 +483,7 @@ void MainWindow::on_pushButtonSend_clicked()
    QString SendTemp;
    int temp;
   // char *buff_Hex = NULL;
-    char buff_Hex[65535] ={0};
+    QByteArray buff_Hex;
    int len_Hex = 0;
 
    //读取发送窗口数据
@@ -512,6 +512,8 @@ void MainWindow::on_pushButtonSend_clicked()
 
        if(len_Hex%2==0)
        {
+           buff_Hex.resize(len_Hex / 2);
+
            for(int i=0;i<len_Hex/2;i++)
            {
               unsigned char temp_A,temp_B,A,B;
@@ -525,9 +527,14 @@ void MainWindow::on_pushButtonSend_clicked()
               {
                   A = temp_A-('A'-10);
               }
-              else
+              else if((temp_A <= 'f')&&(temp_A >= 'a'))
               {
                   A = temp_A-('a'-10);
+              }
+              else
+              {
+                  QMessageBox::warning(this, "格式错误", "十六进制发送包含非法字符！");
+                  return;
               }
 
               temp_B =  (SendTemp.at(2*i+1)).unicode();
@@ -540,24 +547,25 @@ void MainWindow::on_pushButtonSend_clicked()
               {
                   B = temp_B-('A'-10);
               }
-              else
+              else if((temp_B <= 'f')&&(temp_B >= 'a'))
               {
                   B = temp_B-('a'-10);
+              }
+              else
+              {
+                  QMessageBox::warning(this, "格式错误", "十六进制发送包含非法字符！");
+                  return;
               }
 
               buff_Hex[i]=A*16 + B;
             }
-           //ComSendData = SendTemp.toLocal8Bit().data();//获取字符串
 
-           //发送数据
-           //temp = MyCom.write(ComSendData);
-         //发送数据
-         //buff_Hex[0] = len_Hex;
-         temp = MyCom.write(buff_Hex,len_Hex/2);
+         temp = MyCom.write(buff_Hex);
        }
        else
        {
-           temp=0;
+           QMessageBox::warning(this, "格式错误", "十六进制发送长度为奇数！");
+           return;
        }
 
    }
@@ -850,115 +858,32 @@ bool MainWindow::saveTextByIODevice(const QString &aFileName)
 *1.将发送的内容设置到发送框
 *2.调用发送按钮槽函数，完成数据发送
 ***********************************************************/
-void MainWindow::on_pushButtonMuti1_clicked()
+void MainWindow::sendMutiLine(int lineNo)
 {
-    QString Strtemp = ui->lineEditMuti1->text();
+    QLineEdit *edits[] = {
+        ui->lineEditMuti1, ui->lineEditMuti2, ui->lineEditMuti3,
+        ui->lineEditMuti4, ui->lineEditMuti5, ui->lineEditMuti6,
+        ui->lineEditMuti7, ui->lineEditMuti8, ui->lineEditMuti9,
+        ui->lineEditMuti10
+    };
+    if (lineNo < 1 || lineNo > 10) return;
+    QString text = edits[lineNo - 1]->text();
     ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
+    ui->TextSend->insertPlainText(text);
     ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
+    on_pushButtonSend_clicked();
 }
 
-void MainWindow::on_pushButtonMuti2_clicked()
-{
-    QString Strtemp = ui->lineEditMuti2->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti3_clicked()
-{
-    QString Strtemp = ui->lineEditMuti3->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti4_clicked()
-{
-    QString Strtemp = ui->lineEditMuti4->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti5_clicked()
-{
-    QString Strtemp = ui->lineEditMuti5->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti6_clicked()
-{
-    QString Strtemp = ui->lineEditMuti6->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti7_clicked()
-{
-    QString Strtemp = ui->lineEditMuti7->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti8_clicked()
-{
-    QString Strtemp = ui->lineEditMuti8->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti9_clicked()
-{
-    QString Strtemp = ui->lineEditMuti9->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
-
-void MainWindow::on_pushButtonMuti10_clicked()
-{
-    QString Strtemp = ui->lineEditMuti10->text();
-    ui->TextSend->clear();
-    ui->TextSend->insertPlainText(Strtemp);
-    ui->TextSend->moveCursor(QTextCursor::End);
-
-    MainWindow::on_pushButtonSend_clicked();
-
-}
+void MainWindow::on_pushButtonMuti1_clicked()  { sendMutiLine(1); }
+void MainWindow::on_pushButtonMuti2_clicked()  { sendMutiLine(2); }
+void MainWindow::on_pushButtonMuti3_clicked()  { sendMutiLine(3); }
+void MainWindow::on_pushButtonMuti4_clicked()  { sendMutiLine(4); }
+void MainWindow::on_pushButtonMuti5_clicked()  { sendMutiLine(5); }
+void MainWindow::on_pushButtonMuti6_clicked()  { sendMutiLine(6); }
+void MainWindow::on_pushButtonMuti7_clicked()  { sendMutiLine(7); }
+void MainWindow::on_pushButtonMuti8_clicked()  { sendMutiLine(8); }
+void MainWindow::on_pushButtonMuti9_clicked()  { sendMutiLine(9); }
+void MainWindow::on_pushButtonMuti10_clicked() { sendMutiLine(10); }
 
 /***********************************************************
 *清除多行文本
@@ -1020,97 +945,24 @@ void MainWindow::Pre_on_pushButtonSend_clicked()
 ***********************************************************/
 int MainWindow::Get_checkBoxMuti_State()
 {
-    int temp;
+    QCheckBox *boxes[] = {
+        ui->checkBoxMuti_1, ui->checkBoxMuti_2, ui->checkBoxMuti_3,
+        ui->checkBoxMuti_4, ui->checkBoxMuti_5, ui->checkBoxMuti_6,
+        ui->checkBoxMuti_7, ui->checkBoxMuti_8, ui->checkBoxMuti_9,
+        ui->checkBoxMuti_10
+    };
 
-   if(ui->checkBoxMuti_1->isChecked() == true)
-   {
-       MutiState[0]= true;
-   }
-   else
-   {
-       MutiState[0]= false;
-   }
-   if(ui->checkBoxMuti_2->isChecked() == true)
-   {
-       MutiState[1]= true;
-   }
-   else
-   {
-       MutiState[1]= false;
-   }
-   if(ui->checkBoxMuti_3->isChecked() == true)
-   {
-       MutiState[2]= true;
-   }
-   else
-   {
-       MutiState[2]= false;
-   }
-   if(ui->checkBoxMuti_4->isChecked() == true)
-   {
-       MutiState[3]= true;
-   }
-   else
-   {
-       MutiState[3]= false;
-   }
-   if(ui->checkBoxMuti_5->isChecked() == true)
-   {
-       MutiState[4]= true;
-   }
-   else
-   {
-       MutiState[4]= false;
-   }
-   if(ui->checkBoxMuti_6->isChecked() == true)
-   {
-       MutiState[5]= true;
-   }
-   else
-   {
-       MutiState[5]= false;
-   }
-   if(ui->checkBoxMuti_7->isChecked() == true)
-   {
-       MutiState[6]= true;
-   }
-   else
-   {
-       MutiState[6]= false;
-   }
-   if(ui->checkBoxMuti_8->isChecked() == true)
-   {
-       MutiState[7]= true;
-   }
-   else
-   {
-       MutiState[7]= false;
-   }
-   if(ui->checkBoxMuti_9->isChecked() == true)
-   {
-       MutiState[8]= true;
-   }
-   else
-   {
-       MutiState[8]= false;
-   }
-   if(ui->checkBoxMuti_10->isChecked() == true)
-   {
-       MutiState[9]= true;
-   }
-   else
-   {
-       MutiState[9]= false;
-   }
-    for(int i = 9;i>0;i--)
+    for (int i = 0; i < 10; i++)
+        MutiState[i] = boxes[i]->isChecked();
+
+    int temp = 0;
+    for (int i = 9; i >= 0; i--)
     {
-       if( MutiState[i]==true)
-       {
-           temp = i+1;
-           break;
-       }
-       else
-           temp = 0;
+        if (MutiState[i])
+        {
+            temp = i + 1;
+            break;
+        }
     }
     return temp;
 }
@@ -1121,40 +973,7 @@ int MainWindow::Get_checkBoxMuti_State()
 ***********************************************************/
 void MainWindow::SendDataByNoOfEditLineNo(int EditLineNo)
 {
-    switch (EditLineNo) {
-    case 1:
-        on_pushButtonMuti1_clicked();
-        break;
-    case 2:
-        on_pushButtonMuti2_clicked();
-        break;
-    case 3:
-        on_pushButtonMuti3_clicked();
-        break;
-    case 4:
-        on_pushButtonMuti4_clicked();
-        break;
-    case 5:
-        on_pushButtonMuti5_clicked();
-        break;
-    case 6:
-        on_pushButtonMuti6_clicked();
-        break;
-    case 7:
-        on_pushButtonMuti7_clicked();
-        break;
-    case 8:
-        on_pushButtonMuti8_clicked();
-        break;
-    case 9:
-        on_pushButtonMuti9_clicked();
-        break;
-    case 10:
-        on_pushButtonMuti10_clicked();
-        break;
-    default:
-        break;
-    }
+    sendMutiLine(EditLineNo);
 }
 
 /***********************************************************

@@ -23,6 +23,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 RC_ICONS = rymculogo.ico
 # for mac
 ICON = rymculogo.icns
+macx:QMAKE_APPLE_DEVICE_ARCHS = arm64
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -37,7 +38,6 @@ SOURCES += \
     mycom.cpp \
     HexToBin.cpp \
     ry_ymodem.cpp \
-    myfilewatcher.cpp \
     ryesp32isp.cpp
 
 HEADERS += \
@@ -46,9 +46,7 @@ HEADERS += \
     ryisp.h \
     mycom.h \
     HexToBin.h \
-    HexToBin.h \
     ry_ymodem.h \
-    myfilewatcher.h \
     ryesp32isp.h \
     esp32/esp32_protocol.h
 
