@@ -75,7 +75,10 @@ jobs:
         run: choco install nsis -y --no-progress
 
       - name: Create Installer
-        run: makensis installer\RYCOM-2.6.3.nsi
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\Program Files (x86)\NSIS;$env:PATH"
+          makensis installer\RYCOM-2.6.3.nsi
 
       - name: Upload Installer
         uses: actions/upload-artifact@v4
