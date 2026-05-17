@@ -111,7 +111,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         // 网络调试按钮
         pushButton_Network = new QPushButton("网络调试", this);
-        pushButton_Network->setGeometry(480 * myobjectRate, 370 * myobjectRate, 91, 22);
+        pushButton_Network->setGeometry(10 * myobjectRate, 535 * myobjectRate, 91, 22);
         connect(pushButton_Network, &QPushButton::clicked, this, [this]() {
             static uint8_t flag_network = 0;
             flag_network++;
