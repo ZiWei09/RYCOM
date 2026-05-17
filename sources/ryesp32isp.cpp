@@ -3,6 +3,9 @@
 #include <QElapsedTimer>
 #include <QEventLoop>
 
+// 前向声明 static 函数
+static esp_loader_error_t spi_flash_command(spi_flash_cmd_t cmd, void *data_tx, size_t tx_size, void *data_rx, size_t rx_size);
+
 target_registers_t *s_reg = NULL;
 target_chip_t s_target = ESP_UNKNOWN_CHIP;
 uint8_t DELIMITER = 0xC0;
@@ -10,7 +13,11 @@ uint8_t C0_REPLACEMENT[2] = {0xDB, 0xDC};
 uint8_t DB_REPLACEMENT[2] = {0xDB, 0xDD};
 uint32_t ESP32_loader_daud = 115200;//临时存储ESP32下载波特率，用于改变波特率CMD
 uint32_t s_target_flash_size = 0;
-esp32_binaries_t esp32_bin = {NULL};//目标.bin文件信息
+esp32_binaries_t esp32_bin = {
+    {NULL, 0, 0, NULL},  // boot
+    {NULL, 0, 0, NULL},  // part
+    {NULL, 0, 0, NULL}   // app
+};//目标.bin文件信息
 
 static const int ESP32_LOADER_DEFAULT_TIMEOUT_MS = 30000;
 static const int ESP32_FLASH_ERASE_TIMEOUT_PER_MB_MS = 30000;

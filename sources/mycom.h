@@ -6,7 +6,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QMessageBox>
-#include <qapplication>
+#include <QApplication>
 
 //声明全局对象，在.cpp文件定义（切记）
 extern QSerialPort MyCom;//串口对象，项目中唯一的串口对象

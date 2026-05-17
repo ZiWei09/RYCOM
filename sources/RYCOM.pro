@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 #添加串口支持
-QT       += core gui serialport
+QT       += core gui serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -23,6 +23,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 RC_ICONS = rymculogo.ico
 # for mac
 ICON = rymculogo.icns
+macx:QMAKE_APPLE_DEVICE_ARCHS = arm64
+
+# Windows: 修复 GCC 15+ MinGW 中 __imp___argc 链接错误
+# 不使用 Qt6EntryPoint，在 main.cpp 中直接实现 WinMain
+win32 {
+    DEFINES += QT_NO_ENTRYPOINT
+}
+
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -37,8 +45,8 @@ SOURCES += \
     mycom.cpp \
     HexToBin.cpp \
     ry_ymodem.cpp \
-    myfilewatcher.cpp \
-    ryesp32isp.cpp
+    ryesp32isp.cpp \
+    networkdebug.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -46,11 +54,10 @@ HEADERS += \
     ryisp.h \
     mycom.h \
     HexToBin.h \
-    HexToBin.h \
     ry_ymodem.h \
-    myfilewatcher.h \
     ryesp32isp.h \
-    esp32/esp32_protocol.h
+    esp32/esp32_protocol.h \
+    networkdebug.h
 
 FORMS += \
         mainwindow.ui

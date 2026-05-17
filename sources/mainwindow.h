@@ -9,34 +9,34 @@
 #include <QFileDialog>
 #include <QFile>
 #include <QtGlobal>
+#include <QGroupBox>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QTextCodec>
 #else
 #include <QStringConverter>
 #endif
-#include <QScreen>
+// QScreen removed — layouts handle DPI natively
 
 #include <ryisp.h>
 #include <mycom.h>
 #include <HexToBin.h>
 #include <ry_ymodem.h>
-#include <myfilewatcher.h>
 #include <ryesp32isp.h>
+#include "networkdebug.h"
 
 #include"QDebug"
 #include"QObject"
 
 #include <QFileInfo>
 #include <QSettings>
+#include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
+#include <QAbstractAnimation>
 
 extern QSerialPort MyCom;//串口对象，项目中唯一的串口对象
-//运行的操作系统
-enum SYS_TYPE
-{
-  Windows,
-  MACos,
-  Linux
-};
 namespace Ui {
 class MainWindow;
 }
@@ -128,6 +128,13 @@ private slots:
 
     void on_pushButton_STM32_START_clicked();
 
+    // 网络调试槽函数
+    void onNetworkConnectClicked();
+    void onNetworkDataReceived(const QByteArray &data);
+    void onNetworkStateChanged(NetworkDebug::State state);
+    void onNetworkError(const QString &error);
+    void onNetworkProtocolChanged(int index);
+
 private:
     Ui::MainWindow *ui;
 
@@ -144,7 +151,6 @@ private:
     QTimer *recvDelayTimer;//接收延时定时器，解决中文分段乱码
 
     QDateTime curDateTime;//系统时间变量
-    //QFileSystemWatcher* my_watcher;//文件监控对象
 
     //定时器用于监控文件变化
     QTimer *FileChanged;
@@ -153,11 +159,10 @@ private:
     //下列标签将显示在状态栏
     QLabel *qlbSendSum,*qlbRevSum;//发送接收流量label对象
     QLabel *currentTimeLabel; //系统时间显示标签
-    QLabel *qlbLinkRYMCU;//官网链接标签对象
-    QLabel *qlbLinkSource;//源码链接标签对象
 
     void Pre_on_pushButtonSend_clicked();//多行周期发送预处理函数
     int Get_checkBoxMuti_State();//获取多行周期发送的选中状态
+    void sendMutiLine(int lineNo);//发送指定行的数据
     void SendDataByNoOfEditLineNo(int EditLineNo);//根据状态,发送指定行的数据
     void time_update(); //时间更新槽函数，状态栏显示时间
 
@@ -170,10 +175,6 @@ private:
     bool saveTextByIODevice(const QString &aFileName);
     QString byteArrayToUnicode(const QByteArray &array);//编码格式转换
 
-    void changeObjectSize(const QObject &o, double objectRate);//调整控件大小
-    void refreshDPI(SYS_TYPE system);//刷新界面
-    QScreen* screen;
-    double myobjectRate;//dpi比例，用于调整主窗口的大小
     char ISisping;//1：表示正在进行STM32程序下载，2：表示正在进行ESP32程序下载
 
     RY_Ymodem ry_ymodem;
@@ -185,6 +186,14 @@ private:
     QByteArray BOOT_Combine_ByteArray;//存储ESP32 bootloader.bin或者Combine.bin
     QByteArray PART_ByteArray;//存储ESP32 partition-table.bin
     QByteArray APP_ByteArray;//存储ESP32 app.bin
+
+    // 网络调试
+    NetworkDebug *m_networkDebug;
+
+    void on_pushButton_Network_clicked();
+
+    // 面板切换动画
+    void switchStackedWidgetWithFade(int targetIndex);
 
 };
 

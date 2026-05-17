@@ -51,7 +51,7 @@ esp_loader_error_t send_cmd(send_cmd_config *config);
 esp_loader_error_t esp32_loader_spi_attach(uint32_t spi_config,target_chip_t s_target);
 esp_loader_error_t loader_spi_parameters(uint32_t total_size);
 esp_loader_error_t esp_loader_flash_detect_size(uint32_t *flash_size);
-static esp_loader_error_t spi_flash_command(spi_flash_cmd_t cmd, void *data_tx, size_t tx_size, void *data_rx, size_t rx_size);
+// spi_flash_command 是 static 函数，仅在 .cpp 中使用，无需在头文件声明
 
 void get_esp32_addr(target_chip_t target, esp32_binaries_t *bins);
 

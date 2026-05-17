@@ -265,7 +265,6 @@ char ExtendedEraseAll()
 char CMDGo(unsigned int addr)
 {
     unsigned char temp[4],error;     //保存addr的四个字节
-    int i;
     temp[0] = ((addr>>24) & 0xFF);
     temp[1] = ((addr>>16) & 0xFF);
     temp[2] = ((addr>>8 ) & 0xFF);

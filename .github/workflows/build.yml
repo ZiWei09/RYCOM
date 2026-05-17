@@ -1,0 +1,87 @@
+name: Build RYCOM
+
+on:
+  push:
+    branches: [main, 'improve/*']
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.2'
+          host: 'mac'
+          target: 'desktop'
+          modules: 'qtserialport'
+          cache: true
+
+      - name: Build
+        run: |
+          mkdir -p build-codex/macos
+          cd build-codex/macos
+          qmake ../../sources/RYCOM.pro CONFIG+=release
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Package & Sign DMG
+        run: |
+          cp sources/rymculogo.icns build-codex/macos/RYCOM.app/Contents/Resources/
+          macdeployqt build-codex/macos/RYCOM.app -always-overwrite -verbose=2
+          codesign --force --deep --sign - build-codex/macos/RYCOM.app
+          hdiutil create -volname RYCOM -srcfolder build-codex/macos/RYCOM.app -ov -format UDZO build-codex/RYCOM-2.6.3.dmg
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: RYCOM-macOS
+          path: build-codex/RYCOM-2.6.3.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          modules: 'qtserialport'
+          cache: true
+
+      - name: Build
+        shell: bash
+        run: |
+          mkdir -p build-codex
+          cd build-codex
+          qmake ../sources/RYCOM.pro CONFIG+=release
+          mingw32-make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+
+      - name: Collect Runtime Dependencies
+        shell: bash
+        run: |
+          mkdir -p build-codex/package/RYCOM-2.6.3
+          cp build-codex/release/RYCOM.exe build-codex/package/RYCOM-2.6.3/
+          windeployqt --release --no-compiler-runtime --no-translations build-codex/package/RYCOM-2.6.3/RYCOM.exe
+
+      - name: Install NSIS
+        run: choco install nsis -y --no-progress
+
+      - name: Create Installer
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\Program Files (x86)\NSIS;$env:PATH"
+          makensis installer\RYCOM-2.6.3.nsi
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: RYCOM-Windows
+          path: build-codex/RYCOM-2.6.3-Setup.exe
