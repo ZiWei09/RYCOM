@@ -1220,12 +1220,20 @@ void MainWindow::on_pushButton_STM32_START_clicked()
     if(ui->radioButton_EraseALL->isChecked())
     {
        ui->TextRev->insertPlainText("\r\n-------------------------开始擦除FLASH------------------------\r\n");
-       ui->TextRev->insertPlainText("正在全片擦除，时间较长，请您耐心等候....\r\n");//显示数据，   //ui->TextRev->insertPlainText("Erasing....\r\n");//显示数据
+       ui->TextRev->insertPlainText("正在全片擦除，时间较长，请您耐心等候....\r\n");
        on_pushButton_EraseAll_clicked();
     }
     else
     {
-      ui->TextRev->insertPlainText("不擦除内部FLASH....\r\n");
+      int ret = QMessageBox::question(this, "提示",
+          "未选择擦除FLASH，旧代码可能残留导致运行异常。\r\n\r\n继续不擦除下载？",
+          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+      if (ret == QMessageBox::No)
+      {
+          ResumeFormISP();
+          return;
+      }
+      ui->TextRev->insertPlainText("不擦除内部FLASH，直接下载....\r\n");
     }
 
 /*
