@@ -9,6 +9,10 @@
 #include <QFileDialog>
 #include <QFile>
 #include <QtGlobal>
+#include <QGroupBox>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QTextCodec>
 #else
@@ -21,6 +25,7 @@
 #include <HexToBin.h>
 #include <ry_ymodem.h>
 #include <ryesp32isp.h>
+#include "networkdebug.h"
 
 #include"QDebug"
 #include"QObject"
@@ -127,6 +132,13 @@ private slots:
 
     void on_pushButton_STM32_START_clicked();
 
+    // 网络调试槽函数
+    void onNetworkConnectClicked();
+    void onNetworkDataReceived(const QByteArray &data);
+    void onNetworkStateChanged(NetworkDebug::State state);
+    void onNetworkError(const QString &error);
+    void onNetworkProtocolChanged(int index);
+
 private:
     Ui::MainWindow *ui;
 
@@ -184,6 +196,16 @@ private:
     QByteArray BOOT_Combine_ByteArray;//存储ESP32 bootloader.bin或者Combine.bin
     QByteArray PART_ByteArray;//存储ESP32 partition-table.bin
     QByteArray APP_ByteArray;//存储ESP32 app.bin
+
+    // 网络调试
+    NetworkDebug *m_networkDebug;
+    QPushButton *pushButton_Network;
+    QGroupBox *groupBox_network;
+    QComboBox *comboNetworkProtocol;
+    QLineEdit *editNetworkIP;
+    QLineEdit *editNetworkPort;
+    QPushButton *btnNetworkConnect;
+    QLabel *labelNetworkStatus;
 
 };
 

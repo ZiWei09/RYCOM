@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 #添加串口支持
-QT       += core gui serialport
+QT       += core gui serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -38,7 +38,8 @@ SOURCES += \
     mycom.cpp \
     HexToBin.cpp \
     ry_ymodem.cpp \
-    ryesp32isp.cpp
+    ryesp32isp.cpp \
+    networkdebug.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -48,7 +49,8 @@ HEADERS += \
     HexToBin.h \
     ry_ymodem.h \
     ryesp32isp.h \
-    esp32/esp32_protocol.h
+    esp32/esp32_protocol.h \
+    networkdebug.h
 
 FORMS += \
         mainwindow.ui

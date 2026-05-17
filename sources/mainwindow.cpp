@@ -108,8 +108,60 @@ MainWindow::MainWindow(QWidget *parent) :
          qlbLinkSource->setText("<style> a {text-decoration: none} </style> <a href=\"https://github.com/rymcu/RYCOM\">--助手源代码V2.6.3--");// 无下划线
          //隐藏进度条
          ui->progressBar->setVisible(false);
-         //串口指示灯设置为只读控件，屏蔽鼠标点击事件
-         //ui->radioButton_led->setAttribute(Qt::WA_TransparentForMouseEvents,QIODevice::ReadOnly);
+
+        // 网络调试按钮
+        pushButton_Network = new QPushButton("网络调试", this);
+        pushButton_Network->setGeometry(480 * myobjectRate, 370 * myobjectRate, 91, 22);
+        connect(pushButton_Network, &QPushButton::clicked, this, [this]() {
+            static uint8_t flag_network = 0;
+            flag_network++;
+            if (flag_network % 2) {
+                groupBox_network->move(180 * myobjectRate, 382 * myobjectRate);
+                ui->groupBoxSend->hide();
+                ui->groupBox_stm32->move(180 * myobjectRate, 720 * myobjectRate);
+                ui->groupBox_esp32->move(180 * myobjectRate, 596 * myobjectRate);
+            } else {
+                groupBox_network->move(180 * myobjectRate, 720 * myobjectRate);
+                ui->groupBoxSend->show();
+            }
+        });
+
+        // 网络调试面板
+        groupBox_network = new QGroupBox("网络调试", this);
+        groupBox_network->setGeometry(180 * myobjectRate, 720 * myobjectRate, 531, 151);
+
+        QLabel *labelProtocol = new QLabel("协议:", groupBox_network);
+        labelProtocol->setGeometry(10 * myobjectRate, 30 * myobjectRate, 40, 20);
+        comboNetworkProtocol = new QComboBox(groupBox_network);
+        comboNetworkProtocol->setGeometry(50 * myobjectRate, 28 * myobjectRate, 120, 22);
+        comboNetworkProtocol->addItem("TCP 客户端");
+        comboNetworkProtocol->addItem("TCP 服务端");
+        comboNetworkProtocol->addItem("UDP");
+        connect(comboNetworkProtocol, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &MainWindow::onNetworkProtocolChanged);
+
+        QLabel *labelIP = new QLabel("IP:", groupBox_network);
+        labelIP->setGeometry(10 * myobjectRate, 60 * myobjectRate, 40, 20);
+        editNetworkIP = new QLineEdit("127.0.0.1", groupBox_network);
+        editNetworkIP->setGeometry(50 * myobjectRate, 58 * myobjectRate, 140, 22);
+
+        QLabel *labelPort = new QLabel("端口:", groupBox_network);
+        labelPort->setGeometry(200 * myobjectRate, 60 * myobjectRate, 40, 20);
+        editNetworkPort = new QLineEdit("8080", groupBox_network);
+        editNetworkPort->setGeometry(240 * myobjectRate, 58 * myobjectRate, 70, 22);
+
+        btnNetworkConnect = new QPushButton("连接", groupBox_network);
+        btnNetworkConnect->setGeometry(10 * myobjectRate, 90 * myobjectRate, 80, 24);
+        connect(btnNetworkConnect, &QPushButton::clicked, this, &MainWindow::onNetworkConnectClicked);
+
+        labelNetworkStatus = new QLabel("未连接", groupBox_network);
+        labelNetworkStatus->setGeometry(100 * myobjectRate, 94 * myobjectRate, 200, 20);
+        labelNetworkStatus->setStyleSheet("color: gray;");
+
+        m_networkDebug = new NetworkDebug(this);
+        connect(m_networkDebug, &NetworkDebug::dataReceived, this, &MainWindow::onNetworkDataReceived);
+        connect(m_networkDebug, &NetworkDebug::stateChanged, this, &MainWindow::onNetworkStateChanged);
+        connect(m_networkDebug, &NetworkDebug::errorOccurred, this, &MainWindow::onNetworkError);
 }
 
 /***********************************************************
@@ -560,7 +612,12 @@ void MainWindow::on_pushButtonSend_clicked()
               buff_Hex[i]=A*16 + B;
             }
 
-         temp = MyCom.write(buff_Hex);
+         if (m_networkDebug->state() == NetworkDebug::Connected) {
+             m_networkDebug->send(buff_Hex);
+             temp = buff_Hex.size();
+         } else {
+             temp = MyCom.write(buff_Hex);
+         }
        }
        else
        {
@@ -578,7 +635,12 @@ void MainWindow::on_pushButtonSend_clicked()
         ComSendData = SendTemp.toLocal8Bit().data();//获取字符串
 
         //发送数据
-        temp = MyCom.write(ComSendData);
+        if (m_networkDebug->state() == NetworkDebug::Connected) {
+            m_networkDebug->send(ComSendData);
+            temp = ComSendData.size();
+        } else {
+            temp = MyCom.write(ComSendData);
+        }
    }
 
    //统计发送流量，并显示在状态栏
@@ -1087,6 +1149,7 @@ void MainWindow::on_pushButton_RYISP_clicked()
         ui->groupBoxSend->show();
     }
     ui->groupBox_esp32->move(180*myobjectRate,596*myobjectRate);//显示STM32下载框时，确保ESP32框不可见
+    groupBox_network->move(180*myobjectRate,720*myobjectRate);//确保网络框不可见
 }
 
 /***********************************************************
@@ -1647,6 +1710,7 @@ void MainWindow::on_pushButton_ESP32ISP_clicked()
         ui->groupBoxSend->show();
     }
     ui->groupBox_stm32->move(180*myobjectRate,720*myobjectRate);//显示ESP32下载框时，确保STM32框不可见
+    groupBox_network->move(180*myobjectRate,720*myobjectRate);//确保网络框不可见
 
     s_target = (target_chip_t)ui->comboBoxCheck_ESP32->currentIndex();//初始化芯片型号
 }
@@ -2155,5 +2219,93 @@ void MainWindow::on_comboBoxCheck_ESP32_currentIndexChanged(int index)
     default://其他芯片//BOOTLOADER_ADDRESS_V1=0x0
         ui->label_BOOT_Combine->setText("@ 0x0");
         break;
+    }
+}
+
+// 网络调试槽函数实现
+void MainWindow::onNetworkConnectClicked()
+{
+    // 如果已经连接或侦听中，则断开
+    if (m_networkDebug->state() != NetworkDebug::Disconnected) {
+        m_networkDebug->stop();
+        return;
+    }
+
+    NetworkDebug::Protocol proto;
+    switch (comboNetworkProtocol->currentIndex()) {
+    case 0: proto = NetworkDebug::TCP_Client; break;
+    case 1: proto = NetworkDebug::TCP_Server; break;
+    case 2: proto = NetworkDebug::UDP; break;
+    default: proto = NetworkDebug::TCP_Client; break;
+    }
+
+    bool ok;
+    quint16 port = editNetworkPort->text().toUShort(&ok);
+    if (!ok) {
+        labelNetworkStatus->setText("端口号无效");
+        labelNetworkStatus->setStyleSheet("color: red;");
+        return;
+    }
+
+    m_networkDebug->start(proto, editNetworkIP->text(), port);
+}
+
+void MainWindow::onNetworkDataReceived(const QByteArray &data)
+{
+    if (StopDis) return;
+
+    QString revStr;
+    if (ui->checkBoxRevHex->checkState() != false) {
+        revStr = data.toHex(' ').toUpper() + ' ';
+    } else {
+        revStr = QString::fromLocal8Bit(data);
+    }
+
+    if (TimeDateDisp) {
+        QString str = QDateTime::currentDateTime().toString("hh:mm:ss:zzz\r\n");
+        revStr = str.append(revStr);
+    }
+
+    ui->TextRev->insertPlainText(revStr);
+    ui->TextRev->moveCursor(QTextCursor::End);
+
+    ComRevSum += data.size();
+    setNumOnLabel(qlbRevSum, "Rx: ", ComRevSum);
+}
+
+void MainWindow::onNetworkStateChanged(NetworkDebug::State state)
+{
+    switch (state) {
+    case NetworkDebug::Connected:
+        btnNetworkConnect->setText("断开");
+        labelNetworkStatus->setText("已连接 " + editNetworkIP->text() + ":" + editNetworkPort->text());
+        labelNetworkStatus->setStyleSheet("color: green;");
+        break;
+    case NetworkDebug::Listening:
+        btnNetworkConnect->setText("断开");
+        labelNetworkStatus->setText("侦听中 :" + editNetworkPort->text());
+        labelNetworkStatus->setStyleSheet("color: green;");
+        break;
+    case NetworkDebug::Disconnected:
+        btnNetworkConnect->setText("连接");
+        labelNetworkStatus->setText("未连接");
+        labelNetworkStatus->setStyleSheet("color: gray;");
+        break;
+    }
+}
+
+void MainWindow::onNetworkError(const QString &error)
+{
+    ui->TextRev->insertPlainText("[网络错误] " + error + "\r\n");
+    ui->TextRev->moveCursor(QTextCursor::End);
+}
+
+void MainWindow::onNetworkProtocolChanged(int index)
+{
+    // TCP 服务端不需要输入 IP
+    if (index == 1) {
+        editNetworkIP->setEnabled(false);
+    } else {
+        editNetworkIP->setEnabled(true);
     }
 }
