@@ -18,7 +18,7 @@
 #else
 #include <QStringConverter>
 #endif
-#include <QScreen>
+// QScreen removed — layouts handle DPI natively
 
 #include <ryisp.h>
 #include <mycom.h>
@@ -32,15 +32,11 @@
 
 #include <QFileInfo>
 #include <QSettings>
+#include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
+#include <QAbstractAnimation>
 
 extern QSerialPort MyCom;//串口对象，项目中唯一的串口对象
-//运行的操作系统
-enum SYS_TYPE
-{
-  Windows,
-  MACos,
-  Linux
-};
 namespace Ui {
 class MainWindow;
 }
@@ -163,8 +159,6 @@ private:
     //下列标签将显示在状态栏
     QLabel *qlbSendSum,*qlbRevSum;//发送接收流量label对象
     QLabel *currentTimeLabel; //系统时间显示标签
-    QLabel *qlbLinkRYMCU;//官网链接标签对象
-    QLabel *qlbLinkSource;//源码链接标签对象
 
     void Pre_on_pushButtonSend_clicked();//多行周期发送预处理函数
     int Get_checkBoxMuti_State();//获取多行周期发送的选中状态
@@ -181,10 +175,6 @@ private:
     bool saveTextByIODevice(const QString &aFileName);
     QString byteArrayToUnicode(const QByteArray &array);//编码格式转换
 
-    void changeObjectSize(const QObject &o, double objectRate);//调整控件大小
-    void refreshDPI(SYS_TYPE system);//刷新界面
-    QScreen* screen;
-    double myobjectRate;//dpi比例，用于调整主窗口的大小
     char ISisping;//1：表示正在进行STM32程序下载，2：表示正在进行ESP32程序下载
 
     RY_Ymodem ry_ymodem;
@@ -199,13 +189,11 @@ private:
 
     // 网络调试
     NetworkDebug *m_networkDebug;
-    QPushButton *pushButton_Network;
-    QGroupBox *groupBox_network;
-    QComboBox *comboNetworkProtocol;
-    QLineEdit *editNetworkIP;
-    QLineEdit *editNetworkPort;
-    QPushButton *btnNetworkConnect;
-    QLabel *labelNetworkStatus;
+
+    void on_pushButton_Network_clicked();
+
+    // 面板切换动画
+    void switchStackedWidgetWithFade(int targetIndex);
 
 };
 

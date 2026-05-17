@@ -24,7 +24,13 @@ RC_ICONS = rymculogo.ico
 # for mac
 ICON = rymculogo.icns
 macx:QMAKE_APPLE_DEVICE_ARCHS = arm64
-win32: DEFINES += QT_NO_ENTRYPOINT  # 修复 GCC 15+ MinGW 中 __imp___argc 链接错误
+
+# Windows: 修复 GCC 15+ MinGW 中 __imp___argc 链接错误
+# Qt 6.9+ 需要显式链接 mingw32 在 Qt6EntryPoint 之前
+win32 {
+    QMAKE_LIBS_QT_ENTRY = -lmingw32 -lQt6EntryPoint
+}
+
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.

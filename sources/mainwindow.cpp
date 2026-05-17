@@ -16,33 +16,20 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //根据系统选择参数：Windows，MACos,Linux
-#if defined(Q_OS_MACOS) || defined(Q_OS_MAC)
-    refreshDPI(MACos); //根据系统dpi调整窗体大小
-#elif defined(Q_OS_LINUX)
-    refreshDPI(Linux);
-#else
-    refreshDPI(Windows);
-#endif
-    //connect(screen, &QScreen::logicalDotsPerInchChanged, this, &MainWindow::onLogicalDotsPerInchChanged);
-        //失能和隐藏相应控件
-        ui->pushButtonSend->setEnabled(false);//使相应的按钮不可用
-        ui->checkBoxPeriodicSend->setEnabled(false);
-        ui->checkBoxPeriodicMutiSend->setEnabled(false);
-        ui->lineEditTime->setEnabled(false);
-        ui->checkBoxAddNewShift->setEnabled(false);
-        ui->checkBoxSendHex->setEnabled(false);
-        ui->groupBoxMutiSend->hide();//隐藏多行发送区
 
-        ui->groupBoxRev->setFixedWidth(541*myobjectRate);//根据屏幕分辨率不一样固定接收组的大小
-        ui->TextRev->setFixedWidth(521*myobjectRate);//根据屏幕分辨率不一样固定接收窗口的大小
-        this->setFixedSize(729*myobjectRate,584*myobjectRate);//根据屏幕分辨率不一样固定主窗口的大小
+    //失能和隐藏相应控件
+    ui->pushButtonSend->setEnabled(false);//使相应的按钮不可用
+    ui->checkBoxPeriodicSend->setEnabled(false);
+    ui->checkBoxPeriodicMutiSend->setEnabled(false);
+    ui->lineEditTime->setEnabled(false);
+    ui->checkBoxAddNewShift->setEnabled(false);
+    ui->checkBoxSendHex->setEnabled(false);
+    ui->groupBoxMutiSend->hide();//隐藏多行发送区
 #ifdef Q_OS_WIN
         QFont logFont("NSimSun", 10);
         ui->TextRev->setFont(logFont);
         ui->TextSend->setFont(logFont);
 #endif
-
 
         //创建周期发送、时间显示、延时接收定时器，并初始化
         PriecSendTimer = new QTimer;
@@ -80,11 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
         qlbSendSum = new QLabel(this);//创建发送统计标签
         qlbRevSum  = new QLabel(this);//创建接收统计标签
         currentTimeLabel = new QLabel(this); // 创建时间，日期显示标签
-        qlbLinkRYMCU = new QLabel(this);//官网链接标签对象
-        qlbLinkSource = new QLabel(this);//源码链接标签对象
 
-        qlbLinkRYMCU->setMinimumSize(90, 20);// 设置标签最小大小
-        qlbLinkSource->setMinimumSize(90, 20);
         qlbSendSum->setMinimumSize(100, 20);
         qlbRevSum->setMinimumSize(100, 20);
         currentTimeLabel->setMinimumSize(100, 20);
@@ -98,65 +81,15 @@ MainWindow::MainWindow(QWidget *parent) :
          STABar->addPermanentWidget(qlbSendSum);// 从右往左依次添加
          STABar->addPermanentWidget(qlbRevSum);
          STABar->addPermanentWidget(currentTimeLabel);
+         // 进度条默认显示文件输入框
+         ui->stack_stm32_file->setCurrentIndex(0);
 
-         STABar->addWidget(qlbLinkRYMCU);// 从左往右依次添加
-         STABar->addWidget(qlbLinkSource);
-
-         qlbLinkRYMCU->setOpenExternalLinks(true);//状态栏显示官网、源码链接
-         qlbLinkRYMCU->setText("<style> a {text-decoration: none} </style> <a href=\"https://rymcu.com\">--RYMCU官网--");// 无下划线
-         qlbLinkSource->setOpenExternalLinks(true);
-         qlbLinkSource->setText("<style> a {text-decoration: none} </style> <a href=\"https://github.com/rymcu/RYCOM\">--助手源代码V2.6.3--");// 无下划线
-         //隐藏进度条
-         ui->progressBar->setVisible(false);
-
-        // 网络调试按钮
-        pushButton_Network = new QPushButton("网络调试", this);
-        pushButton_Network->setGeometry(10 * myobjectRate, 535 * myobjectRate, 91, 22);
-        connect(pushButton_Network, &QPushButton::clicked, this, [this]() {
-            static uint8_t flag_network = 0;
-            flag_network++;
-            if (flag_network % 2) {
-                groupBox_network->move(180 * myobjectRate, 382 * myobjectRate);
-                ui->groupBoxSend->hide();
-                ui->groupBox_stm32->move(180 * myobjectRate, 720 * myobjectRate);
-                ui->groupBox_esp32->move(180 * myobjectRate, 596 * myobjectRate);
-            } else {
-                groupBox_network->move(180 * myobjectRate, 720 * myobjectRate);
-                ui->groupBoxSend->show();
-            }
-        });
-
-        // 网络调试面板
-        groupBox_network = new QGroupBox("网络调试", this);
-        groupBox_network->setGeometry(180 * myobjectRate, 720 * myobjectRate, 531, 151);
-
-        QLabel *labelProtocol = new QLabel("协议:", groupBox_network);
-        labelProtocol->setGeometry(10 * myobjectRate, 30 * myobjectRate, 40, 20);
-        comboNetworkProtocol = new QComboBox(groupBox_network);
-        comboNetworkProtocol->setGeometry(50 * myobjectRate, 28 * myobjectRate, 120, 22);
-        comboNetworkProtocol->addItem("TCP 客户端");
-        comboNetworkProtocol->addItem("TCP 服务端");
-        comboNetworkProtocol->addItem("UDP");
-        connect(comboNetworkProtocol, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        // 网络调试 — 控件由 .ui 创建，连接信号
+        connect(ui->pushButton_Network, &QPushButton::clicked, this, &MainWindow::on_pushButton_Network_clicked);
+        connect(ui->comboNetworkProtocol, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, &MainWindow::onNetworkProtocolChanged);
-
-        QLabel *labelIP = new QLabel("IP:", groupBox_network);
-        labelIP->setGeometry(10 * myobjectRate, 60 * myobjectRate, 40, 20);
-        editNetworkIP = new QLineEdit("127.0.0.1", groupBox_network);
-        editNetworkIP->setGeometry(50 * myobjectRate, 58 * myobjectRate, 140, 22);
-
-        QLabel *labelPort = new QLabel("端口:", groupBox_network);
-        labelPort->setGeometry(200 * myobjectRate, 60 * myobjectRate, 40, 20);
-        editNetworkPort = new QLineEdit("8080", groupBox_network);
-        editNetworkPort->setGeometry(240 * myobjectRate, 58 * myobjectRate, 70, 22);
-
-        btnNetworkConnect = new QPushButton("连接", groupBox_network);
-        btnNetworkConnect->setGeometry(10 * myobjectRate, 90 * myobjectRate, 80, 24);
-        connect(btnNetworkConnect, &QPushButton::clicked, this, &MainWindow::onNetworkConnectClicked);
-
-        labelNetworkStatus = new QLabel("未连接", groupBox_network);
-        labelNetworkStatus->setGeometry(100 * myobjectRate, 94 * myobjectRate, 200, 20);
-        labelNetworkStatus->setStyleSheet("color: gray;");
+        connect(ui->btnNetworkConnect, &QPushButton::clicked, this, &MainWindow::onNetworkConnectClicked);
+        ui->labelNetworkStatus->setStyleSheet("color: gray;");
 
         m_networkDebug = new NetworkDebug(this);
         connect(m_networkDebug, &NetworkDebug::dataReceived, this, &MainWindow::onNetworkDataReceived);
@@ -752,19 +685,11 @@ void MainWindow::on_radioButton_clicked()
     if(ui->radioButton->isChecked() == false)
     {
         ui->checkBoxPeriodicMutiSend->setChecked(false);
-        ui->groupBoxMutiSend->hide();//隐藏多行发送界面
-        //ui->groupBoxRev->setFixedWidth(541);
-        //ui->TextRev->setFixedWidth(521);
-        ui->groupBoxRev->setFixedWidth(541*myobjectRate);
-        ui->TextRev->setFixedWidth(521*myobjectRate);
+        ui->groupBoxMutiSend->hide();
     }
     else
     {
-        //ui->groupBoxRev->setFixedWidth(341);
-        //ui->TextRev->setFixedWidth(321);
-        ui->groupBoxRev->setFixedWidth(341*myobjectRate);
-        ui->TextRev->setFixedWidth(321*myobjectRate);
-        ui->groupBoxMutiSend->show();//显示多行发送界面
+        ui->groupBoxMutiSend->show();
     }
 }
 
@@ -1038,53 +963,6 @@ void MainWindow::SendDataByNoOfEditLineNo(int EditLineNo)
     sendMutiLine(EditLineNo);
 }
 
-/***********************************************************
-*刷新dpi，获取当前屏幕状态，并伸缩所用控件的大小
-*只在窗口构造函数中调用，因此，改变屏幕分辨率需要重新启动软件
-***********************************************************/
-void MainWindow::refreshDPI(SYS_TYPE system)
-{
-    //计算dpi
-    QList<QScreen*> screens = QApplication::screens();
-    QScreen* screen = screens[0];
-    qreal dpi = screen->logicalDotsPerInch();
-
-    //计算dpi对应的缩放比例,96win,72mac
-    double sys_type;
-    switch (system)
-    {
-        case Windows:
-            sys_type = 96.0;
-            break;
-        case MACos:
-            sys_type = 72.0;
-            break;
-        case Linux:
-            sys_type = 96.0;
-            break;
-        default:
-            sys_type = 96.0;
-            break;
-    }
-    double objectRate = dpi/sys_type;
-    myobjectRate=objectRate;
-    changeObjectSize(*this, objectRate);
-    resize(width()*objectRate,height()*objectRate);
-}
-/***********************************************************
-* 根据屏幕清空调整控件大小
-***********************************************************/
-void MainWindow::changeObjectSize(const QObject &o, double objectRate)
-{
-    for (int i=0; i<o.children().size(); ++i) {
-        QWidget *pWidget = qobject_cast<QWidget *>(o.children().at(i));
-        if (pWidget != nullptr) {
-            pWidget->setGeometry(pWidget->x()*objectRate,pWidget->y()*objectRate,
-                                 pWidget->width()*objectRate, pWidget->height()*objectRate);
-            changeObjectSize(*(o.children().at(i)),objectRate);
-        }
-    }
-}
 
 
 
@@ -1136,20 +1014,12 @@ void MainWindow::on_pushButton_RYISP_clicked()
          QMessageBox::critical(this, "提示", "请先打开串口!");
         return;
     }
-    ui->progressBar->setVisible(false);//隐藏进度条
+    ui->stack_stm32_file->setCurrentIndex(0);//隐藏进度条
     flag_stm32++;
     if(flag_stm32%2)
-    {
-        ui->groupBox_stm32->move(180*myobjectRate,382*myobjectRate);
-        ui->groupBoxSend->hide();
-    }
+        switchStackedWidgetWithFade(2);
     else
-    {
-        ui->groupBox_stm32->move(180*myobjectRate,720*myobjectRate);
-        ui->groupBoxSend->show();
-    }
-    ui->groupBox_esp32->move(180*myobjectRate,596*myobjectRate);//显示STM32下载框时，确保ESP32框不可见
-    groupBox_network->move(180*myobjectRate,720*myobjectRate);//确保网络框不可见
+        switchStackedWidgetWithFade(0);
 }
 
 /***********************************************************
@@ -1313,8 +1183,7 @@ ui->TextRev->insertPlainText(CharToHex((char *)dataflash,4));//显示数据
 */
 
    //开始下载程序
-    ui->progressBar->setVisible(true);//显示进度条
-    //ui->progressBar->setMinimumSize(200, 20);  // 宽度足够显示文本
+    ui->stack_stm32_file->setCurrentIndex(1);//显示进度条
     ui->progressBar->setTextVisible(true);
     ui->progressBar->setFormat("%p%");
    on_pushButton_WriteBin_clicked();
@@ -1414,7 +1283,8 @@ char MainWindow:: OpenMyFile()
          //RESULT_STATUS res = HexFile2BinFile(c_str, "/") ;
          //if(res != RES_OK) return;
          //unsigned int addr;
-         if(HexFile2BinFile(c_str, "/",&ISPBeginAddr) == RES_OK)
+         const char* separator = "/";
+         if(HexFile2BinFile(c_str, const_cast<char*>(separator), &ISPBeginAddr) == RES_OK)
              //ISPBeginAddr = GetProgramBeginAddr(); /////////////////////////////////////////////             
          {
              myDebug()<<"HexFile2BinFile errer";
@@ -1427,10 +1297,10 @@ char MainWindow:: OpenMyFile()
 
          QFile   aFile(aFileName);//用IODevice方式打开文本文件
          if (!aFile.exists()) //文件不存在
-          return 0;
+             return 0;
          if (!aFile.open(QIODevice::ReadOnly))
-          return 0;
-          text = aFile.readAll();
+             return 0;
+         text = aFile.readAll();
          aFile.close();
          //获取程序首地址
          ISPBeginAddr = GetProgramBeginAddr();//bin文件从界面获得首地址
@@ -1528,6 +1398,7 @@ void MainWindow::on_pushButton_WriteBin_clicked()
            return;
        }
        ui->progressBar->setValue(0);//最后清零，防止下次下载是从最大开始
+       ui->stack_stm32_file->setCurrentIndex(0);//下载完成，切回文件输入界面
    }
     ui->TextRev->insertPlainText("\r\n\r\n------------------------下载成功!enjoy!-----------------------");
     ui->TextRev->insertPlainText("\r\n\r\n-----------RYMCU嵌入式知识学习交流平台(rymcu.com)-------------\r\n");//ui->TextRev->insertPlainText("\r\n\r\n------succeed!------\r\n");
@@ -1613,17 +1484,17 @@ void MainWindow::on_pushButton_Ymodem_clicked()
     PrintFileinfo();
   //发送数据包
     //隐藏进度条
-    ui->progressBar->setVisible(true);
+    ui->stack_stm32_file->setCurrentIndex(1);
      ui->progressBar->setMaximum(ry_ymodem.FileSize/YMODEM_PACKET_1K_SIZE);
      //ui->TextRev->insertPlainText("开始发送文件!\r\n");
-    for(int32_t i=0;i<=ry_ymodem.FileSize/YMODEM_PACKET_1K_SIZE;i++)
+    for(uint32_t i=0;i<=ry_ymodem.FileSize/YMODEM_PACKET_1K_SIZE;i++)
     {
          if(0 != ry_ymodem.TxData(i)) {ui->TextRev->insertPlainText("数据包错误!\r\n");ui->progressBar->setValue(0);ISisping = 0;return;}
         ui->progressBar->setValue(ry_ymodem.YmodemProgress);
         ui->TextRev->insertPlainText(".");
     }
     //隐藏进度条
-    ui->progressBar->setVisible(false);
+    ui->stack_stm32_file->setCurrentIndex(0);
     ui->progressBar->setValue(0);
 
    //发送结束
@@ -1688,29 +1559,19 @@ void MainWindow::on_pushButton_ESP32ISP_clicked()
          QMessageBox::critical(this, "提示", "请先打开串口!");
         return;
     }
-    ui->progressBar_BOOT_Combine->setVisible(false);//隐藏进度条
-    ui->progressBar_PART->setVisible(false);
-    ui->progressBar_APP->setVisible(false);
-    //显示文件输入框
-    ui->lineEdit_BOOT_Combine->setVisible(true);
+    ui->stack_BOOT->setCurrentIndex(0);//显示文件输入框
+    ui->stack_PART->setCurrentIndex(0);
+    ui->stack_APP->setCurrentIndex(0);
     if(ui->radioButton_combine->isChecked() == false)
     {
-      ui->lineEdit_APP->setVisible(true);
-      ui->lineEdit_PART->setVisible(true);
+      ui->widget_PART_row->show();
+      ui->widget_APP_row->show();
     }
     flag++;
     if(flag%2)
-    {
-        ui->groupBox_esp32->move(180*myobjectRate,382*myobjectRate);
-        ui->groupBoxSend->hide();
-    }
+        switchStackedWidgetWithFade(1);
     else
-    {
-        ui->groupBox_esp32->move(180*myobjectRate,596*myobjectRate);
-        ui->groupBoxSend->show();
-    }
-    ui->groupBox_stm32->move(180*myobjectRate,720*myobjectRate);//显示ESP32下载框时，确保STM32框不可见
-    groupBox_network->move(180*myobjectRate,720*myobjectRate);//确保网络框不可见
+        switchStackedWidgetWithFade(0);
 
     s_target = (target_chip_t)ui->comboBoxCheck_ESP32->currentIndex();//初始化芯片型号
 }
@@ -1726,12 +1587,8 @@ void MainWindow::on_radioButton_combine_clicked()
        ui->lineEdit_BOOT_Combine->setPlaceholderText("选择合并后的.bin"); // 设置占位符文本
        ui->label_BOOT_Combine->setText("@ 0x0");
 
-        ui->pushButton_Open_PART->hide();
-        ui->lineEdit_PART->hide();
-        ui->label_PART->hide();
-        ui->pushButton_Open_APP->hide();
-        ui->lineEdit_APP->hide();
-        ui->label_APP->hide();
+        ui->widget_PART_row->hide();
+        ui->widget_APP_row->hide();
 
 
     }
@@ -1741,12 +1598,8 @@ void MainWindow::on_radioButton_combine_clicked()
         ui->lineEdit_BOOT_Combine->setPlaceholderText("选择bootlaoder.bin"); // 设置占位符文本
         ui->label_BOOT_Combine->setText(temp);
 
-        ui->pushButton_Open_PART->show();
-        ui->lineEdit_PART->show();
-        ui->label_PART->show();
-        ui->pushButton_Open_APP->show();
-        ui->lineEdit_APP->show();
-        ui->label_APP->show();
+        ui->widget_PART_row->show();
+        ui->widget_APP_row->show();
     }
 }
 /***********************************************************
@@ -2018,31 +1871,25 @@ esp_loader_error_t MainWindow::esp32_flash_binary(const uint8_t *bin, size_t siz
     uiRefreshTimer.start();
     switch (location) {
     case BOOT_COMBIN:
-        ui->progressBar_BOOT_Combine->setVisible(true);
+        ui->stack_BOOT->setCurrentIndex(1);
         ui->progressBar_BOOT_Combine->setTextVisible(true);
         ui->progressBar_BOOT_Combine->setFormat("%p%");
         ui->progressBar_BOOT_Combine->setMaximum(binary_size);
         ui->progressBar_BOOT_Combine->setValue(written);
-        //隐藏文件输入框
-        ui->lineEdit_BOOT_Combine->setVisible(false);
         break;
     case PART:
-        ui->progressBar_PART->setVisible(true);
+        ui->stack_PART->setCurrentIndex(1);
         ui->progressBar_PART->setTextVisible(true);
         ui->progressBar_PART->setFormat("%p%");
         ui->progressBar_PART->setMaximum(binary_size);
-        ui->progressBar_PART->setValue(written);       
-        //隐藏文件输入框
-        ui->lineEdit_PART->setVisible(false);
+        ui->progressBar_PART->setValue(written);
         break;
     case APP:
-        ui->progressBar_APP->setVisible(true);
+        ui->stack_APP->setCurrentIndex(1);
         ui->progressBar_APP->setTextVisible(true);
         ui->progressBar_APP->setFormat("%p%");
         ui->progressBar_APP->setMaximum(binary_size);
         ui->progressBar_APP->setValue(written);
-        //隐藏文件输入框
-        ui->lineEdit_APP->setVisible(false);
         break;
     default:
         break;
@@ -2093,6 +1940,21 @@ esp_loader_error_t MainWindow::esp32_flash_binary(const uint8_t *bin, size_t siz
     };
 
     myDebug()<<"Finished programming";
+
+    // 下载完成，切回文件输入界面
+    switch (location) {
+    case BOOT_COMBIN:
+        ui->stack_BOOT->setCurrentIndex(0);
+        break;
+    case PART:
+        ui->stack_PART->setCurrentIndex(0);
+        break;
+    case APP:
+        ui->stack_APP->setCurrentIndex(0);
+        break;
+    default:
+        break;
+    }
 
     return ESP_LOADER_SUCCESS;
 }
@@ -2162,9 +2024,9 @@ char MainWindow::ESP32BinProcess()
         ui->groupBoxRev->setTitle("接收区");
         ISisping = 0;
 
-        ui->progressBar_BOOT_Combine->setVisible(false);//隐藏进度条
-        ui->progressBar_PART->setVisible(false);
-        ui->progressBar_APP->setVisible(false);
+        ui->stack_BOOT->setCurrentIndex(0);
+        ui->stack_PART->setCurrentIndex(0);
+        ui->stack_APP->setCurrentIndex(0);
 
         return 1;
     }
@@ -2222,6 +2084,47 @@ void MainWindow::on_comboBoxCheck_ESP32_currentIndexChanged(int index)
     }
 }
 
+// 网络调试 — 面板切换按钮
+void MainWindow::on_pushButton_Network_clicked()
+{
+    static uint8_t flag_network = 0;
+    flag_network++;
+    if (flag_network % 2)
+        switchStackedWidgetWithFade(3);
+    else
+        switchStackedWidgetWithFade(0);
+}
+
+// 面板切换动画 — 淡入淡出效果
+void MainWindow::switchStackedWidgetWithFade(int targetIndex)
+{
+    if (ui->stackedWidget->currentIndex() == targetIndex) {
+        return; // 已经在目标页面，无需切换
+    }
+
+    // 直接切换页面，不使用复杂的双向动画
+    ui->stackedWidget->setCurrentIndex(targetIndex);
+
+    QWidget *targetWidget = ui->stackedWidget->currentWidget();
+
+    // 为目标页面创建透明度效果
+    QGraphicsOpacityEffect *fadeInEffect = new QGraphicsOpacityEffect(targetWidget);
+    targetWidget->setGraphicsEffect(fadeInEffect);
+
+    // 淡入动画
+    QPropertyAnimation *fadeIn = new QPropertyAnimation(fadeInEffect, "opacity");
+    fadeIn->setDuration(150);
+    fadeIn->setStartValue(0.0);
+    fadeIn->setEndValue(1.0);
+
+    // 动画完成后清除效果
+    connect(fadeIn, &QPropertyAnimation::finished, [targetWidget]() {
+        targetWidget->setGraphicsEffect(nullptr);
+    });
+
+    fadeIn->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
 // 网络调试槽函数实现
 void MainWindow::onNetworkConnectClicked()
 {
@@ -2232,7 +2135,7 @@ void MainWindow::onNetworkConnectClicked()
     }
 
     NetworkDebug::Protocol proto;
-    switch (comboNetworkProtocol->currentIndex()) {
+    switch (ui->comboNetworkProtocol->currentIndex()) {
     case 0: proto = NetworkDebug::TCP_Client; break;
     case 1: proto = NetworkDebug::TCP_Server; break;
     case 2: proto = NetworkDebug::UDP; break;
@@ -2240,14 +2143,14 @@ void MainWindow::onNetworkConnectClicked()
     }
 
     bool ok;
-    quint16 port = editNetworkPort->text().toUShort(&ok);
+    quint16 port = ui->editNetworkPort->text().toUShort(&ok);
     if (!ok) {
-        labelNetworkStatus->setText("端口号无效");
-        labelNetworkStatus->setStyleSheet("color: red;");
+        ui->labelNetworkStatus->setText("端口号无效");
+        ui->labelNetworkStatus->setStyleSheet("color: red;");
         return;
     }
 
-    m_networkDebug->start(proto, editNetworkIP->text(), port);
+    m_networkDebug->start(proto, ui->editNetworkIP->text(), port);
 }
 
 void MainWindow::onNetworkDataReceived(const QByteArray &data)
@@ -2277,19 +2180,19 @@ void MainWindow::onNetworkStateChanged(NetworkDebug::State state)
 {
     switch (state) {
     case NetworkDebug::Connected:
-        btnNetworkConnect->setText("断开");
-        labelNetworkStatus->setText("已连接 " + editNetworkIP->text() + ":" + editNetworkPort->text());
-        labelNetworkStatus->setStyleSheet("color: green;");
+        ui->btnNetworkConnect->setText("断开");
+        ui->labelNetworkStatus->setText("已连接 " + ui->editNetworkIP->text() + ":" + ui->editNetworkPort->text());
+        ui->labelNetworkStatus->setStyleSheet("color: green;");
         break;
     case NetworkDebug::Listening:
-        btnNetworkConnect->setText("断开");
-        labelNetworkStatus->setText("侦听中 :" + editNetworkPort->text());
-        labelNetworkStatus->setStyleSheet("color: green;");
+        ui->btnNetworkConnect->setText("断开");
+        ui->labelNetworkStatus->setText("侦听中 :" + ui->editNetworkPort->text());
+        ui->labelNetworkStatus->setStyleSheet("color: green;");
         break;
     case NetworkDebug::Disconnected:
-        btnNetworkConnect->setText("连接");
-        labelNetworkStatus->setText("未连接");
-        labelNetworkStatus->setStyleSheet("color: gray;");
+        ui->btnNetworkConnect->setText("连接");
+        ui->labelNetworkStatus->setText("未连接");
+        ui->labelNetworkStatus->setStyleSheet("color: gray;");
         break;
     }
 }
@@ -2302,10 +2205,9 @@ void MainWindow::onNetworkError(const QString &error)
 
 void MainWindow::onNetworkProtocolChanged(int index)
 {
-    // TCP 服务端不需要输入 IP
     if (index == 1) {
-        editNetworkIP->setEnabled(false);
+        ui->editNetworkIP->setEnabled(false);
     } else {
-        editNetworkIP->setEnabled(true);
+        ui->editNetworkIP->setEnabled(true);
     }
 }

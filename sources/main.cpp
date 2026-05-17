@@ -21,6 +21,5 @@ int main(int argc, char *argv[])
 }
 
 // 编译说明：
-// 1. 根据系统调整refreshDPI(Windows/MACos/Linux), mainwindow.cpp
-// 2. release版本注销QT_DEBUG定义, ryesp32isp.h
-// 3. 版本历史见 git log 或 GitHub Releases
+// 1. release版本注销QT_DEBUG定义, ryesp32isp.h
+// 2. 版本历史见 git log 或 GitHub Releases
