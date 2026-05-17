@@ -57,17 +57,19 @@ jobs:
           cache: true
 
       - name: Build
+        shell: bash
         run: |
-          mkdir build-codex
+          mkdir -p build-codex
           cd build-codex
-          qmake ..\sources\RYCOM.pro CONFIG+=release
-          mingw32-make -j%NUMBER_OF_PROCESSORS%
+          qmake ../sources/RYCOM.pro CONFIG+=release
+          mingw32-make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
       - name: Collect Runtime Dependencies
+        shell: bash
         run: |
-          mkdir build-codex\package\RYCOM-2.6.3
-          copy build-codex\release\RYCOM.exe build-codex\package\RYCOM-2.6.3\
-          windeployqt --release --no-compiler-runtime --no-translations build-codex\package\RYCOM-2.6.3\RYCOM.exe
+          mkdir -p build-codex/package/RYCOM-2.6.3
+          cp build-codex/release/RYCOM.exe build-codex/package/RYCOM-2.6.3/
+          windeployqt --release --no-compiler-runtime --no-translations build-codex/package/RYCOM-2.6.3/RYCOM.exe
 
       - name: Install NSIS
         run: choco install nsis -y --no-progress
